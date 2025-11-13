@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction Tool for 3-month Tofa Treatment Outcomes in RA Patients</title>
+  <style>
+    /*
+      Basic page styling modelled after the provided JAKi prediction tool.  A light
+      background with a centred white panel conveys an academic, journal‐like
+      aesthetic.  Times New Roman is used throughout to comply with the
+      typographic requirements.
+    */
+    body {
+      font-family: 'Times New Roman', serif;
+      margin: 40px;
+      background-color: #f7f7f7;
+      color: #333333;
+      font-size: 16px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 25px 35px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+      flex: 1 1 calc(50% - 20px);
+    }
+    .form-group.full-width {
+      flex: 1 1 100%;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .form-group label {
+      font-size: 16px;
+      margin-bottom: 5px;
+      font-weight: normal;
+    }
+    .form-group input[type="number"], .form-group select, #outcomeSelect {
+      padding: 7px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: 'Times New Roman', serif;
+    }
+    #predictBtn {
+      display: block;
+      margin: 30px auto 10px;
+      padding: 12px 36px;
+      font-size: 18px;
+      background-color: #4a8fd7;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Times New Roman', serif;
+    }
+    #predictBtn:hover {
+      background-color: #3e78ba;
+    }
+    #result {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Prediction Tool for 3-month Tofa Treatment Outcomes in RA Patients</h1>
+    <div class="form-group full-width">
+      <label for="outcomeSelect">Select Outcome Variable:</label>
+      <select id="outcomeSelect">
+        <option value="3-month DAS28CRP remission(True=1,false=0)">3‑month DAS28CRP remission</option>
+        <option value="3-month DAS28ESR remission(True=1,false=0)">3‑month DAS28ESR remission</option>
+        <option value="3-month SDAI remission(True=1,false=0)">3‑month SDAI remission</option>
+        <option value="3-month CDAI remission(True=1,false=0)">3‑month CDAI remission</option>
+      </select>
+    </div>
+    <!-- Input fields for each predictor variable -->
+    <div id="inputs" class="form-row">
+      <!-- Age -->
+      <div class="form-group">
+        <label for="Age(years)">Age (years):</label>
+        <input type="number" step="0.1" id="Age(years)" placeholder="Enter age in years">
+      </div>
+      <!-- Duration from diagnosis -->
+      <div class="form-group">
+        <label for="Duration from diagnosis(months)">Duration from diagnosis (months):</label>
+        <input type="number" step="0.1" id="Duration from diagnosis(months)" placeholder="Enter duration in months">
+      </div>
+      <!-- BMI -->
+      <div class="form-group">
+        <label for="BMI">BMI:</label>
+        <input type="number" step="0.1" id="BMI" placeholder="Enter BMI">
+      </div>
+      <!-- Baseline TJC -->
+      <div class="form-group">
+        <label for="Baseline TJC">Baseline TJC:</label>
+        <input type="number" step="0.1" id="Baseline TJC" placeholder="Enter baseline TJC">
+      </div>
+      <!-- Baseline SJC -->
+      <div class="form-group">
+        <label for="Baseline SJC">Baseline SJC:</label>
+        <input type="number" step="0.1" id="Baseline SJC" placeholder="Enter baseline SJC">
+      </div>
+      <!-- Baseline PGA -->
+      <div class="form-group">
+        <label for="Baseline PGA(0-100)">Baseline PGA(0-100):</label>
+        <input type="number" step="0.1" id="Baseline PGA(0-100)" placeholder="Enter baseline PGA">
+      </div>
+      <!-- Baseline EGA -->
+      <div class="form-group">
+        <label for="Baseline EGA(0-100)">Baseline EGA(0-100):</label>
+        <input type="number" step="0.1" id="Baseline EGA(0-100)" placeholder="Enter baseline EGA">
+      </div>
+      <!-- Baseline ESR -->
+      <div class="form-group">
+        <label for="Baseline ESR(mm/h)">Baseline ESR(mm/h):</label>
+        <input type="number" step="0.1" id="Baseline ESR(mm/h)" placeholder="Enter baseline ESR">
+      </div>
+      <!-- Baseline CRP -->
+      <div class="form-group">
+        <label for="Baseline CRP(mg/L)">Baseline CRP(mg/L):</label>
+        <input type="number" step="0.1" id="Baseline CRP(mg/L)" placeholder="Enter baseline CRP">
+      </div>
+      <!-- Gender -->
+      <div class="form-group">
+        <label for="Gender(Female=0,male=1)">Gender(Female=0,male=1):</label>
+        <select id="Gender(Female=0,male=1)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- JAK naive -->
+      <div class="form-group">
+        <label for="JAK naive(True=1,false=0)">JAK naive(True=1,false=0):</label>
+        <select id="JAK naive(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- Treatment naive -->
+      <div class="form-group">
+        <label for="Treatment naive(True=1,false=0)">Treatment naive(True=1,false=0):</label>
+        <select id="Treatment naive(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- MTX at baseline -->
+      <div class="form-group">
+        <label for="MTX at baseline(True=1,false=0)">MTX at baseline(True=1,false=0):</label>
+        <select id="MTX at baseline(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- Other cDMARD at baseline -->
+      <div class="form-group">
+        <label for="Other cDMARD at baseline(True=1,false=0)">Other cDMARD at baseline(True=1,false=0):</label>
+        <select id="Other cDMARD at baseline(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- Prior bDMARD -->
+      <div class="form-group">
+        <label for="Prior bDMARD(True=1,false=0)">Prior bDMARD(True=1,false=0):</label>
+        <select id="Prior bDMARD(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- Glucocorticoid -->
+      <div class="form-group">
+        <label for="Glucocorticoid(True=1,false=0) at baseline">Glucocorticoid(True=1,false=0) at baseline:</label>
+        <select id="Glucocorticoid(True=1,false=0) at baseline">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+      <!-- Baseline RF positive -->
+      <div class="form-group">
+        <label for="Baseline RF positive(True=1,false=0)">Baseline RF positive(True=1,false=0):</label>
+        <select id="Baseline RF positive(True=1,false=0)">
+          <option value="">Select</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+        </select>
+      </div>
+    </div>
+    <button id="predictBtn">Predict</button>
+    <div id="result"></div>
+  </div>
+
+  <!-- Load the model parameters before the main script -->
+  <script src="modelData_tofa.js"></script>
+  <script>
+    // Embed the trained model parameters.  This object was created in Python and
+    // contains means and standard deviations for scaling, logistic models for
+    // DAS28ESR and CDAI outcomes, and tree ensembles for the random forest
+    // (SDAI outcome) and XGBoost (DAS28CRP outcome).  The continuous and binary
+    // feature lists define which variables are standardised.
+    // The modelData object is defined in an external file (modelData_tofa.js)
+    // and loaded via a script tag.  It contains the complete trained
+    // parameters and is available as a global constant.
+    // modelData is defined in modelData_tofa.js
+
+    /**
+     * Scales an input feature vector.  Continuous variables are z‑scored using
+     * the means and standard deviations from the training data; binary
+     * variables remain unchanged.  The returned array preserves the same
+     * ordering as modelData.features.
+     *
+     * @param {Object} values Mapping from feature names to numeric values.
+     * @returns {number[]} Scaled feature array.
+     */
+    function scaleFeatures(values) {
+      const scaled = [];
+      for (const feat of modelData.features) {
+        let val = parseFloat(values[feat]);
+        if (modelData.continuous_features.includes(feat)) {
+          const mean = modelData.means[feat];
+          const std = modelData.stds[feat];
+          if (std === 0) {
+            scaled.push(0);
+          } else {
+            scaled.push((val - mean) / std);
+          }
+        } else {
+          scaled.push(val);
+        }
+      }
+      return scaled;
+    }
+
+    /**
+     * Computes the sigmoid function.
+     * @param {number} x
+     * @returns {number}
+     */
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+
+    /**
+     * Predicts probability using logistic regression.
+     * @param {Object} model An object with intercept and coefficients.
+     * @param {number[]} scaledFeatures Scaled feature array.
+     * @returns {number} Probability between 0 and 1.
+     */
+    function predictLogistic(model, scaledFeatures) {
+      let logit = model.intercept;
+      for (let i = 0; i < scaledFeatures.length; i++) {
+        logit += model.coefficients[i] * scaledFeatures[i];
+      }
+      return sigmoid(logit);
+    }
+
+    /**
+     * Traverses a single decision tree and returns the predicted probability at
+     * the leaf.  For random forest trees, each leaf stores the probability of
+     * the positive class.
+     *
+     * @param {Object} tree A nested tree structure.
+     * @param {Object} values Input values (unscaled) keyed by feature name.
+     * @returns {number} Leaf probability.
+     */
+    function traverseTree(tree, values) {
+      let node = tree;
+      while (true) {
+        if (Object.prototype.hasOwnProperty.call(node, 'value')) {
+          return node.value;
+        }
+        const feature = node.feature;
+        const threshold = node.threshold;
+        const val = parseFloat(values[feature]);
+        // In XGBoost the split uses <= for yes; for RandomForest we use <= as well
+        if (val <= threshold) {
+          node = node.left;
+        } else {
+          node = node.right;
+        }
+      }
+    }
+
+    /**
+     * Predicts probability using the random forest ensemble.  The final
+     * probability is the average of probabilities from all decision trees.
+     * @param {Object} rfModel Model containing a list of trees.
+     * @param {Object} values Input feature values (unscaled).
+     * @returns {number} Predicted probability.
+     */
+    function predictRandomForest(rfModel, values) {
+      let sum = 0;
+      for (const tree of rfModel.trees) {
+        sum += traverseTree(tree, values);
+      }
+      return sum / rfModel.trees.length;
+    }
+
+    /**
+     * Predicts probability using the XGBoost ensemble.  Each tree contributes
+     * a raw score; the learning rate is applied to the sum of raw scores, and
+     * the final probability is obtained by applying the sigmoid to the logit.
+     * Note: This implementation approximates the behaviour of the trained
+     * XGBoost model.  It assumes a base logit of zero (equivalent to a
+     * base probability of 0.5).
+     * @param {Object} xgbModel Model containing trees, learning rate and base logit.
+     * @param {Object} values Input feature values (unscaled).
+     * @returns {number} Predicted probability.
+     */
+    function predictXGBoost(xgbModel, values) {
+      let rawSum = 0;
+      for (const tree of xgbModel.trees) {
+        rawSum += traverseTree(tree, values);
+      }
+      const logit = (xgbModel.base_score_logit || 0) + xgbModel.learning_rate * rawSum;
+      return sigmoid(logit);
+    }
+
+    /**
+     * Handles the prediction when the user clicks the Predict button.  It
+     * collects input values, validates them, selects the appropriate model
+     * based on the chosen outcome, computes the predicted probability and
+     * binary classification, and renders the result to the page.
+     */
+    function handlePredict(event) {
+      event.preventDefault();
+      // Gather input values
+      const values = {};
+      let valid = true;
+      for (const feat of modelData.features) {
+        const element = document.getElementById(feat);
+        const valStr = element.value;
+        if (valStr === '' || valStr === null) {
+          valid = false;
+          element.style.borderColor = '#dc3545';
+        } else {
+          element.style.borderColor = '#ccc';
+          values[feat] = parseFloat(valStr);
+        }
+      }
+      if (!valid) {
+        document.getElementById('result').innerText = 'Please fill in all predictor fields.';
+        return;
+      }
+      const outcome = document.getElementById('outcomeSelect').value;
+      let probability;
+      let predictedClass;
+      if (outcome === '3-month DAS28CRP remission(True=1,false=0)') {
+        // XGBoost model
+        probability = predictXGBoost(modelData.xgb_model, values);
+      } else if (outcome === '3-month SDAI remission(True=1,false=0)') {
+        // Random forest model
+        probability = predictRandomForest(modelData.rf_model, values);
+      } else {
+        // Logistic regression models for DAS28ESR and CDAI
+        const scaled = scaleFeatures(values);
+        const model = modelData.logistic_models[outcome];
+        probability = predictLogistic(model, scaled);
+      }
+      predictedClass = probability >= 0.5 ? 1 : 0;
+      // Format probability to two decimal places
+      const probStr = (probability * 100).toFixed(2) + '%';
+      let outcomeName;
+      switch (outcome) {
+        case '3-month DAS28CRP remission(True=1,false=0)':
+          outcomeName = 'DAS28CRP remission';
+          break;
+        case '3-month DAS28ESR remission(True=1,false=0)':
+          outcomeName = 'DAS28ESR remission';
+          break;
+        case '3-month SDAI remission(True=1,false=0)':
+          outcomeName = 'SDAI remission';
+          break;
+        case '3-month CDAI remission(True=1,false=0)':
+          outcomeName = 'CDAI remission';
+          break;
+        default:
+          outcomeName = '';
+      }
+      document.getElementById('result').innerText = `Predicted ${outcomeName}: ${predictedClass} (Probability: ${probStr})`;
+    }
+
+    // Attach event listener to the Predict button
+    document.getElementById('predictBtn').addEventListener('click', handlePredict);
+  </script>
+</body>
+</html>
